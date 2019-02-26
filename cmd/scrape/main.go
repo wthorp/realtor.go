@@ -1,30 +1,30 @@
-package scrape
+package main
 
 import (
 	"flag"
 	"fmt"
-	"log"
-	"net/http"
-	"strings"
-	"time"
 
 	"realtor.go/pkg/realtor"
 )
 
 func main() {
-	var place
+	var place string
 	//get command line options
-	flag.StringVar(&wms, "place", "Pittsburgh, PA", "The name of the area to search")
+	flag.StringVar(&place, "place", "Pittsburgh, PA", "The name of the area to search")
 	flag.Parse()
 	if place == "" {
 		flag.PrintDefaults()
 		return
 	}
 
-	s := realtor.NewSession()
+	s, err := realtor.NewSession()
+	if err != nil {
+		fmt.Println("NewSession: " + err.Error())
+		return
+	}
 	p, err := s.FindPlace("Pittsburgh, PA")
-	if err {
-		fmt.Println(err.Error())
+	if err != nil {
+		fmt.Println("FindPlace: " + err.Error())
 		return
 	}
 	fmt.Printf("%+v", p)
