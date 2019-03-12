@@ -1,6 +1,7 @@
 package realtor
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,6 +19,19 @@ type Session struct {
 func NewSession() (*Session, error) {
 	s := &Session{}
 	return s, s.http("GET", "https://www.realtor.com/", nil, nil) //populate cookieJar
+}
+
+// Search returns place information by name
+func (s *Session) Search(req ListingRequest) (*ListingResponse, error) {
+	b, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	rdr := bytes.NewReader(b)
+	res := &ListingResponse{}
+	u := "https://www.realtor.com/search_result.json"
+	err = s.http("POST", u, rdr, res)
+	return res, err
 }
 
 // FindPlace returns place information by name
