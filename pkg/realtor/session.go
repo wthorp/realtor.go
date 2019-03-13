@@ -34,6 +34,46 @@ func (s *Session) Search(req ListingRequest) (*ListingResponse, error) {
 	return res, err
 }
 
+// QuadSearch repeatedly searches an area, breaking it into four parts and searching again until all listings are found
+func (s *Session) QuadSearch(f Facets, minx, miny, maxx, maxy float64, listings map[string]Listing) error {
+	req := ListingRequest{
+		Facets:      f,
+		PageSize:    200,
+		BoundingBox: fmt.Sprintf("%.15f,%.15f,%.15f,%.15f", minx, miny, maxx, maxy),
+		Pos:         fmt.Sprintf("%.6f,%.6f,%.6f,%.6f,11", miny, minx, maxy, maxx),
+	}
+	fmt.Printf("Searching %s\n", req.BoundingBox)
+	r, err := s.Search(req)
+	if err != nil {
+		return err
+	}
+	if r.Results.Property.Count < r.Results.Property.Total {
+		midx := (minx + maxx) / 2
+		midy := (miny + maxy) / 2
+		err = s.QuadSearch(f, minx, miny, midx, midy, listings)
+		if err != nil {
+			return err
+		}
+		err = s.QuadSearch(f, minx, midy, midx, maxy, listings)
+		if err != nil {
+			return err
+		}
+		err = s.QuadSearch(f, midx, miny, maxx, midy, listings)
+		if err != nil {
+			return err
+		}
+		err = s.QuadSearch(f, midx, midy, maxx, maxy, listings)
+		if err != nil {
+			return err
+		}
+	} else {
+		for k, v := range r.Results.Property.Items {
+			listings[k] = v
+		}
+	}
+	return nil
+}
+
 // FindPlace returns place information by name
 func (s *Session) FindPlace(place string) (*Place, error) {
 	u := "https://www.realtor.com/api/v1/geo-landing/parser/suggest/?input=%s&area_types=neighborhood&area_types=city&area_types=postal_code&limit=1&includeState=false"

@@ -30,19 +30,14 @@ func main() {
 	}
 	fmt.Printf("%+v", p)
 	//query
-	req := realtor.ListingRequest{
-		Facets: realtor.Facets{
-			BedsMin:                   4,
-			IncludePendingContingency: false,
-		},
-		PageSize:    200,
-		BoundingBox: "-80.3646522705942,40.252238699938296,-79.77860032967624,40.75813885384505",
-		Pos:         "40.252239,-80.364652,40.758139,-79.7786,11",
-	}
-	r, err := s.Search(req)
+	listings := map[string]realtor.Listing{}
+	err = s.QuadSearch(realtor.Facets{BedsMin: 4}, -80.3646522705942, 40.252238699938296, -79.77860032967624, 40.75813885384505, listings)
 	if err != nil {
 		fmt.Println("FindPlace: " + err.Error())
 		return
 	}
-	fmt.Printf("%+v", r)
+	for k, v := range listings {
+		fmt.Printf("%s = %v\n", k, v)
+	}
+	fmt.Printf("(%d items)", len(listings))
 }
