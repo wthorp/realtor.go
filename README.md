@@ -1,4 +1,4 @@
-# realtor.com 
+# realtor.com scraper
 
 This is a tool was originally written to pull Realtor.com real estate listings into proper GIS programs.
 
